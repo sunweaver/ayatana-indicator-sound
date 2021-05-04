@@ -9,7 +9,15 @@ find_package(PkgConfig REQUIRED)
 include(GNUInstallDirs)
 include(UseVala)
 
-option (enable_tests "Build the package's automatic tests." ON)
+option (ENABLE_TESTS "Build the package's automatic tests." OFF)
+option (ENABLE_COVERAGE "Generate lcov code coverage reports." OFF)
+
+if(ENABLE_COVERAGE)
+    set(ENABLE_TESTS ON)
+    set(CMAKE_BUILD_TYPE "Coverage")
+else()
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
 
 set(GETTEXT_PACKAGE "ayatana-indicator-sound")
 set(LOCALEDIR "${CMAKE_INSTALL_FULL_DATADIR}/locale")
@@ -77,14 +85,16 @@ add_subdirectory(data)
 add_subdirectory(src)
 add_subdirectory(po)
 
-if (${enable_tests})
+if (ENABLE_TESTS)
     pkg_check_modules(TEST REQUIRED dbustest-1>=15.04.0)
     enable_testing()
     add_subdirectory(tests)
-    find_package(CoverageReport)
-    ENABLE_COVERAGE_REPORT(
-        TARGETS ${COVERAGE_TARGETS}
-        TESTS ${COVERAGE_TEST_TARGETS}
-        FILTER /usr/include ${CMAKE_BINARY_DIR}/*
- )
+    if (ENABLE_COVERAGE)
+        find_package(CoverageReport)
+        ENABLE_COVERAGE_REPORT(
+            TARGETS ${COVERAGE_TARGETS}
+            TESTS ${COVERAGE_TEST_TARGETS}
+            FILTER /usr/include ${CMAKE_BINARY_DIR}/*
+        )
+    endif ()
 endif ()
